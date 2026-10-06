@@ -1,0 +1,67 @@
+{
+  "Sword": {
+    "damage": 10,
+    "cooldownMs": 420,
+    "clientCooldownFrames": 25,
+    "reach": 38,
+    "length": 50,
+    "knockback": 9,
+    "guardDamageMultiplier": 3.2
+  },
+  "Spear": {
+    "damage": 8,
+    "cooldownMs": 500,
+    "clientCooldownFrames": 30,
+    "reach": 48,
+    "length": 65,
+    "knockback": 7,
+    "guardDamageMultiplier": 3.2
+  },
+  "Hammer": {
+    "damage": 20,
+    "cooldownMs": 900,
+    "clientCooldownFrames": 54,
+    "reach": 32,
+    "length": 55,
+    "knockback": 14,
+    "guardDamageMultiplier": 3.2
+  },
+  "Axe": {
+    "damage": 16,
+    "cooldownMs": 700,
+    "clientCooldownFrames": 42,
+    "reach": 35,
+    "length": 52,
+    "knockback": 11,
+    "guardDamageMultiplier": 3.2
+  },
+  "Dagger": {
+    "damage": 8,
+    "cooldownMs": 850,
+    "clientCooldownFrames": 58,
+    "reach": 25,
+    "length": 35,
+    "knockback": 5,
+    "guardDamageMultiplier": 3.0,
+    "projectileSpeed": 10,
+    "projectileLifeFrames": 95,
+    "hitboxX": 15,
+    "hitboxY": 18,
+    "throwWindupFrames": 12
+  },
+  "Gun": {
+    "damage": 9,
+    "cooldownMs": 420,
+    "clientCooldownFrames": 25,
+    "reach": 500,
+    "length": 42,
+    "knockback": 6,
+    "guardDamageMultiplier": 3.0,
+    "projectileSpeed": 16,
+    "projectileLifeFrames": 70,
+    "hitboxX": 18,
+    "hitboxY": 28,
+    "ammo": 8,
+    "reloadMs": 1000
+  }
+}
