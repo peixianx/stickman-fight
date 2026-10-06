@@ -1,14 +1,17 @@
-const express=require('express');const http=require('http');const {Server}=require('socket.io');
-const app=express(),server=http.createServer(app),io=new Server(server);app.use(express.static('public'));
-const rooms=new Map();const code=()=>Math.random().toString(36).slice(2,7).toUpperCase();
-const roster=c=>(rooms.get(c)||[]).map((id,i)=>({id,player:i+1}));
-function sendRoster(c){io.to(c).emit('roster',roster(c));}
+const express=require('express'),http=require('http'),{Server}=require('socket.io');
+const app=express(),server=http.createServer(app),io=new Server(server,{pingTimeout:20000,pingInterval:10000});app.use(express.static('public'));
+const rooms=new Map(), code=()=>Math.random().toString(36).slice(2,7).toUpperCase();
+function roster(c){const r=rooms.get(c);return r?[...r.players.values()].map(p=>({id:p.id,player:p.num,hp:p.hp,host:p.id===r.host})):[]}
+function sendRoster(c){io.to(c).emit('roster',roster(c))}
+function resetRoom(c){const r=rooms.get(c);if(!r)return;for(const p of r.players.values())p.hp=100;r.round++;r.started=true;io.to(c).emit('restart',{round:r.round});io.to(c).emit('started',{round:r.round});sendRoster(c)}
+function leave(s){const c=s.data.room,r=rooms.get(c);if(!r)return;r.players.delete(s.id);if(!r.players.size){rooms.delete(c);return}if(r.host===s.id)r.host=r.players.keys().next().value;if(r.players.size<2)r.started=false;sendRoster(c);io.to(c).emit('playerLeft',{count:r.players.size})}
 io.on('connection',s=>{
- s.on('create',cb=>{let c;do c=code();while(rooms.has(c));rooms.set(c,[s.id]);s.join(c);s.data.room=c;s.data.player=1;cb({ok:true,code:c,player:1});sendRoster(c);});
- s.on('join',(raw,cb)=>{let c=(raw||'').trim().toUpperCase(),r=rooms.get(c);if(!r||r.length>=4)return cb({ok:false,reason:!r?'notfound':'full'});r.push(s.id);s.join(c);s.data.room=c;s.data.player=r.length;cb({ok:true,code:c,player:r.length});sendRoster(c);io.to(c).emit('ready',{count:r.length});});
- s.on('state',d=>{if(s.data.room)s.to(s.data.room).emit('state',{...d,player:s.data.player});});
- s.on('hit',d=>{if(s.data.room)io.to(s.data.room).emit('hit',{...d,attacker:s.data.player});});
- s.on('weapon',d=>{if(s.data.room)s.to(s.data.room).emit('weapon',{player:s.data.player,weapon:d.weapon});});
- s.on('restart',()=>{if(s.data.room)io.to(s.data.room).emit('restart');});
- s.on('disconnect',()=>{let c=s.data.room,r=rooms.get(c);if(!r)return;r=r.filter(id=>id!==s.id);if(!r.length){rooms.delete(c);return;}rooms.set(c,r);r.forEach((id,i)=>{let q=io.sockets.sockets.get(id);if(q)q.data.player=i+1;});sendRoster(c);io.to(c).emit('playerLeft',{count:r.length});});
-});server.listen(process.env.PORT||3000,()=>console.log('Stickman Online 4-player running'));
+ s.on('create',cb=>{let c;do c=code();while(rooms.has(c));rooms.set(c,{players:new Map(),round:1,started:false,host:s.id});const r=rooms.get(c);r.players.set(s.id,{id:s.id,num:1,hp:100,lastHit:0});s.join(c);s.data.room=c;s.data.player=1;cb({ok:true,code:c,player:1});sendRoster(c)});
+ s.on('join',(raw,cb)=>{const c=(raw||'').trim().toUpperCase(),r=rooms.get(c);if(!r||r.players.size>=4)return cb({ok:false,reason:!r?'notfound':'full'});const used=new Set([...r.players.values()].map(p=>p.num));let n=1;while(used.has(n))n++;r.players.set(s.id,{id:s.id,num:n,hp:100,lastHit:0});s.join(c);s.data.room=c;s.data.player=n;cb({ok:true,code:c,player:n});sendRoster(c);io.to(c).emit('ready',{count:r.players.size})});
+ s.on('start',()=>{const r=rooms.get(s.data.room);if(!r||r.host!==s.id||r.players.size<2||r.started)return;r.started=true;for(const p of r.players.values())p.hp=100;io.to(s.data.room).emit('started',{round:r.round});sendRoster(s.data.room)});
+ s.on('state',d=>{const r=rooms.get(s.data.room),me=r&&r.players.get(s.id);if(!r||!r.started||!me||!d||typeof d.s!=='object')return;s.to(s.data.room).emit('state',{s:d.s,player:me.num})});
+ s.on('hit',d=>{const r=rooms.get(s.data.room),a=r&&r.players.get(s.id);if(!r||!r.started||!a||a.hp<=0)return;const now=Date.now();const target=[...r.players.values()].find(p=>p.num===Number(d.target));if(!target||target.hp<=0||target.id===s.id)return;const ST={Sword:{damage:10,push:9,cool:420},Spear:{damage:8,push:7,cool:500},Hammer:{damage:20,push:14,cool:900},Axe:{damage:16,push:11,cool:700},Dagger:{damage:6,push:5,cool:250}};const weapon=ST[d.weapon] ? d.weapon : 'Sword', st=ST[weapon];if(now-a.lastHit<st.cool)return;a.lastHit=now;const blocked=!!d.blocked,dmg=blocked?Math.ceil(st.damage*.25):st.damage,push=(Number(d.dir)<0?-1:1)*(blocked?3:st.push);target.hp=Math.max(0,target.hp-dmg);io.to(s.data.room).emit('damage',{target:target.num,hp:target.hp,damage:dmg,push,attacker:a.num});sendRoster(s.data.room)});
+ s.on('weapon',d=>{if(s.data.room&&['Sword','Spear','Hammer','Axe','Dagger'].includes(d&&d.weapon))s.to(s.data.room).emit('weapon',{player:s.data.player,weapon:d.weapon})});
+ s.on('restart',()=>{const r=rooms.get(s.data.room);if(r&&r.players.size>=2)resetRoom(s.data.room)});s.on('disconnect',()=>leave(s));
+});
+server.listen(process.env.PORT||3000,()=>console.log('Stickman Online Party Brawl running'));

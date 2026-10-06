@@ -1,4 +1,11 @@
-STICKMAN ONLINE BRAWL — 2 TO 4 PLAYERS
+STICKMAN ONLINE PARTY BRAWL — 2 TO 4 PLAYERS
+
+WHAT CHANGED
+- Network state is capped to 20 updates/sec instead of every animation frame.
+- The server is authoritative for health/damage, reducing desync and hangs.
+- Disconnects are removed cleanly from the room.
+- Added dash (Shift or Space), hit sparks and screen shake.
+- Fight Again resets everyone in the room without reloading.
 
 Run locally:
 1. Install Node.js.
@@ -7,13 +14,6 @@ Run locally:
 4. Run: npm start
 5. Open http://localhost:3000
 
-Online hosting:
-Deploy the whole folder to a Node.js host such as Render. The app uses process.env.PORT automatically.
+Deploy the whole folder to Render or another Node.js host. Start command: npm start
 
-How to play:
-- One player creates a room and shares the 5-character code.
-- Up to 3 more players join the same room.
-- Last stickman with HP remaining wins.
-- Fight Again resets everyone in the room.
-- Move: A/D or arrows; Jump: W/up; Attack: F/K; Block: G/L.
-- 1 Sword, 2 Spear, 3 Hammer, 4 Axe.
+Controls: A/D or arrows move; W/up jump; F/K attack; G/L block; Shift/Space dash; 1-4 choose weapons.
