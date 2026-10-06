@@ -1,16 +1,19 @@
-STICKMAN ONLINE
+STICKMAN ONLINE BRAWL — 2 TO 4 PLAYERS
 
+Run locally:
 1. Install Node.js.
 2. Open a terminal in this folder.
 3. Run: npm install
 4. Run: npm start
 5. Open http://localhost:3000
 
-To play across the internet, deploy this entire folder to a Node.js hosting service. The host must support WebSockets. Once deployed, share the site's URL. One player clicks Create Room and sends the 5-character room code to the other player.
+Online hosting:
+Deploy the whole folder to a Node.js host such as Render. The app uses process.env.PORT automatically.
 
-Controls:
-A/D or arrows = move
-W or Up = jump
-F or K = attack
-G or L = block
-1/2/3/4 = Sword/Spear/Hammer/Axe
+How to play:
+- One player creates a room and shares the 5-character code.
+- Up to 3 more players join the same room.
+- Last stickman with HP remaining wins.
+- Fight Again resets everyone in the room.
+- Move: A/D or arrows; Jump: W/up; Attack: F/K; Block: G/L.
+- 1 Sword, 2 Spear, 3 Hammer, 4 Axe.
